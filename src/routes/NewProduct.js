@@ -1,11 +1,13 @@
 import React from 'react'
 import { View, TextInput, Button, Text, AsyncStorage, Image} from 'react-native'
 import styled from 'styled-components/native'
-import { graphql } from 'react-apollo'
-import gql from 'graphql-tag'
 import TextField from '../components/TextField'
 import { TOKEN_KEY } from '../constants'
 import { ImagePicker, Permissions } from 'expo';
+
+import { graphql } from 'react-apollo'
+import gql from 'graphql-tag'
+import { ReactNativeFile } from 'apollo-upload-client'
 
 const NewProductView = styled.View`
   flex: 1;
@@ -44,12 +46,19 @@ class Login extends React.Component {
   }
 
   submit = async () => {
-    let response;
+    const { pictureUrl: uri, name, price } = this.state
+    const picture = new ReactNativeFile({ uri, type: 'image/png', name: 'picture-name'})
+
     try {
-      response = await this.props.mutate({
-        variables: this.state.values,
+      await this.props.mutate({
+        variables: {
+          name,
+          price: parseFloat(price),
+          picture,
+        },
       });
     } catch (err) {
+      console.log('err : ', err)
     }
 
     this.props.history.push('/products');
@@ -97,4 +106,13 @@ class Login extends React.Component {
     )
   }
 }
-export default Login
+
+const createProductMutation = gql`
+   mutation($name: String!, $price: Float!, $picture: Upload!) {
+     createProduct(name: $name, price: $price, picture: $picture) {
+       id
+     }
+   }
+ `;
+
+export default graphql(createProductMutation)(Login)

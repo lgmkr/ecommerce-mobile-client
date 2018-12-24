@@ -10,8 +10,6 @@ class CheckToken extends React.Component {
     // await AsyncStorage.clear()
     const token = await AsyncStorage.getItem(TOKEN_KEY)
 
-    console.log('token : ', token)
-
     if(!token) {
       this.props.history.push('/signup')
       return
@@ -19,9 +17,7 @@ class CheckToken extends React.Component {
 
     let response
     try {
-      response = await this.props.mutate({
-        variables: { token }
-      })
+      response = await this.props.mutate()
     } catch(err) {
       this.props.history.push('/signup')
       return
@@ -38,8 +34,8 @@ class CheckToken extends React.Component {
 }
 
 const CheckTokenMutation = gql`
-  mutation($token: String!){
-    refreshToken(token: $token)
+  mutation{
+    refreshToken
   }
 `
 
