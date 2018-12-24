@@ -4,6 +4,7 @@ import styled from 'styled-components/native'
 import { graphql } from 'react-apollo'
 import gql from 'graphql-tag'
 import TextField from '../components/TextField'
+import { TOKEN_KEY } from '../constants'
 
 const LoginView = styled.View`
   flex: 1;
@@ -43,7 +44,7 @@ class Login extends React.Component {
     const {payload, error} = response.data.login
 
     if(payload) {
-      await AsyncStorage.setItem('@ecommerce/token', payload.token)
+      await AsyncStorage.setItem(TOKEN_KEY, payload.token)
       this.setState(defaultState)
       this.props.history.push('/products')
     } else {
