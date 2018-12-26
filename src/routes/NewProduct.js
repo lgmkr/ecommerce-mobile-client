@@ -3,8 +3,8 @@ import { View, TextInput, Button, Text, AsyncStorage, Image} from 'react-native'
 import styled from 'styled-components/native'
 import TextField from '../components/TextField'
 import { TOKEN_KEY } from '../constants'
-import { ImagePicker, Permissions } from 'expo';
-
+import { ImagePicker, Permissions } from 'expo'
+import { productsQuery } from './Products'
 import { graphql } from 'react-apollo'
 import gql from 'graphql-tag'
 import { ReactNativeFile } from 'apollo-upload-client'
@@ -55,6 +55,11 @@ class Login extends React.Component {
           name,
           price: parseFloat(price),
           picture,
+        },
+        update: (store, { data: { createProduct } }) => {
+          const data = store.readQuery({ query: productsQuery });
+          data.products.push(createProduct);
+          store.writeQuery({ query: productsQuery, data });
         },
       });
     } catch (err) {
@@ -110,7 +115,11 @@ class Login extends React.Component {
 const createProductMutation = gql`
    mutation($name: String!, $price: Float!, $picture: Upload!) {
      createProduct(name: $name, price: $price, picture: $picture) {
-       id
+      id
+      name
+      price
+      pictureUrl
+      __typename
      }
    }
  `;

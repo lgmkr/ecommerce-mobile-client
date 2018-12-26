@@ -3,6 +3,9 @@ import { graphql } from 'react-apollo'
 import gql from 'graphql-tag'
 import { AsyncStorage, Text } from 'react-native'
 import { TOKEN_KEY } from '../constants'
+import { connect } from "react-redux"
+import { bindActionCreators } from "redux"
+import { addUser } from '../reducers/user'
 
 class CheckToken extends React.Component {
   componentDidMount = async () => {
@@ -19,12 +22,15 @@ class CheckToken extends React.Component {
     try {
       response = await this.props.mutate()
     } catch(err) {
+      console.log('err : ', err)
       this.props.history.push('/signup')
       return
     }
 
-    const { refreshToken } = response.data
-    await AsyncStorage.setItem(TOKEN_KEY, refreshToken)
+    const { refreshToken: { token: newToken, userId } } = response.data
+    console.log('newToken : ', newToken)
+    await AsyncStorage.setItem(TOKEN_KEY, newToken)
+    this.props.addUserAction({ userId })
     this.props.history.push('/products')
   }
 
@@ -35,8 +41,14 @@ class CheckToken extends React.Component {
 
 const CheckTokenMutation = gql`
   mutation{
-    refreshToken
+    refreshToken {
+      token
+      userId
+    }
   }
 `
-
-export default graphql(CheckTokenMutation)(CheckToken)
+const CheckTokenWithGraphQL = graphql(CheckTokenMutation)(CheckToken)
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  addUserAction: addUser
+}, dispatch)
+export default connect(null, mapDispatchToProps)(CheckTokenWithGraphQL)
