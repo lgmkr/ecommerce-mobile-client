@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, Button, FlatList, Image } from 'react-native';
+import { Text, View, Button, FlatList, Image, ActivityIndicator } from 'react-native';
 import styled from 'styled-components/native'
 import { graphql } from 'react-apollo'
 import gql from 'graphql-tag'
@@ -35,7 +35,7 @@ const EditSection = styled.View`
   flex-direction: row;
 `
 
-const ProductItem = ({item, userId}) => <ProductRow>
+const ProductItem = ({item, userId, history, onPress}) => <ProductRow>
     <ProductImage
       source={{ uri: `http://localhost:4000/${item.pictureUrl}` }}
     />
@@ -43,7 +43,12 @@ const ProductItem = ({item, userId}) => <ProductRow>
       <ProductName>{item.name}</ProductName>
       <ProductPrice>${item.price}</ProductPrice>
       <EditSection>
-        <Button title="Edit" />
+        <Button
+          title="Edit"
+          onPress={
+            onPress
+          }
+        />
         <Button title="Delete" />
       </EditSection>
     </ProductSummary>
@@ -54,11 +59,21 @@ const Products = ({ data: {products}, loading, history, userId }) => {
     return null
   }
 
+  const onPressEdit = (item) => {
+      history.push({
+        pathname: '/edit-product',
+        state: item,
+      })
+  }
   return (<View>
     <Button title="Create Product" onPress={() => history.push('/new-product')} />
     <FlatList
       data={products}
-      renderItem={({item}) => (<ProductItem item={item} userId={userId}/>)}
+      ListFooterComponent={ () => <ActivityIndicator size='large' />}
+      onEndReached={ () => {}}
+
+      // data={products.map(x => ({ ...x, showButtons: this.state.userId === x.seller.id }))}
+      renderItem={({item}) => (<ProductItem onPress={() => onPressEdit(item)} item={item} userId={userId}/>)}
       keyExtractor={(item, index) => item.id}
     />
   </View>)

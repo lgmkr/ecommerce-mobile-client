@@ -4,10 +4,11 @@ import styled from 'styled-components/native'
 import TextField from '../components/TextField'
 import { TOKEN_KEY } from '../constants'
 import { ImagePicker, Permissions } from 'expo'
-import { productsQuery } from './Products'
 import { graphql } from 'react-apollo'
 import gql from 'graphql-tag'
 import { ReactNativeFile } from 'apollo-upload-client'
+import { productsQuery } from './Products';
+import Form from '../components/Form';
 
 const NewProductView = styled.View`
   flex: 1;
@@ -34,20 +35,14 @@ const defaultState = {
   price: ''
 }
 
-class Login extends React.Component {
-  state = defaultState
-
-  componentDidMount = async () => {
-    const camera = await Permissions.askAsync(Permissions.CAMERA);
-    const cameraRoll = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-    // proceed camera/roll premissions management
-    console.log('camera: ', camera);
-    console.log('roll: ', cameraRoll);
-  }
-
-  submit = async () => {
-    const { pictureUrl: uri, name, price } = this.state
-    const picture = new ReactNativeFile({ uri, type: 'image/png', name: 'picture-name'})
+class NewProduct extends React.Component {
+  submit = async (values) => {
+    const { pictureUrl, name, price } = values;
+    const picture = new ReactNativeFile({
+      uri: pictureUrl,
+      type: 'image/png',
+      name: 'i-am-a-name',
+    });
 
     try {
       await this.props.mutate({
@@ -63,65 +58,32 @@ class Login extends React.Component {
         },
       });
     } catch (err) {
-      console.log('err : ', err)
+      console.log('err happened');
+      console.log(err);
+      return;
     }
 
     this.props.history.push('/products');
-  }
-
-  onChangeText = (key, value) => {
-    this.setState(state => ({
-      ...state,
-      [key]: value
-    }))
-  }
-
-  pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
-
-    if (!result.cancelled) {
-      this.setState({ pictureUrl: result.uri });
-    }
   };
 
   render() {
-    const { name , pictureUrl: uri, price} = this.state
-    return (
-      <NewProductView>
-        <NewProductInputView>
-          <TextField
-            onChangeText={this.onChangeText}
-            value={name}
-            name='name'
-          />
-
-          <TextField
-            onChangeText={this.onChangeText}
-            value={price}
-            name='price'
-          />
-          <Button title="Pick an image from camera roll" onPress={this.pickImage} />
-          {uri ? (<Image  source={{ uri }} style={{width: 200, height: 200}} />) : <Text>No image uploaded</Text>}
-          <Button title="Create" onPress={this.submit}/>
-        </NewProductInputView>
-      </NewProductView>
-    )
+    return <Form submit={this.submit} />;
   }
 }
 
 const createProductMutation = gql`
-   mutation($name: String!, $price: Float!, $picture: Upload!) {
-     createProduct(name: $name, price: $price, picture: $picture) {
+  mutation($name: String!, $price: Float!, $picture: Upload!) {
+    createProduct(name: $name, price: $price, picture: $picture) {
+      __typename
       id
       name
       price
       pictureUrl
-      __typename
-     }
-   }
- `;
+      # seller {
+      #   id
+      # }
+    }
+  }
+`;
 
-export default graphql(createProductMutation)(Login)
+export default graphql(createProductMutation)(NewProduct);
